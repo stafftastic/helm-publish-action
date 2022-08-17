@@ -18,6 +18,9 @@ outputs:
   chart:
     description: The published chart including the tag
     value: ${{steps.publish.outputs.pushed}}
+defaults:
+  run:
+    shell: sh
 runs:
   using: composite
   steps:
