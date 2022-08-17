@@ -40,13 +40,15 @@ runs:
           "${{steps.meta.outputs.httpsEndpoint}}"
     - name: Package Helm chart
       id: package
-      shell: sh
+      shell: bash
       run: |
+        set -o pipefail
         version="${GITHUB_REF_NAME#v}"
         tarball="$(helm package . --version "$version" | sed -r 's/^[^:]+:\s+//')"
         echo ::set-output name=tarball::"$tarball"
     - name: Publish Helm chart
       id: publish
-      shell: sh
+      shell: bash
       run: |
+        set -o pipefail
         helm push "${{steps.package.outputs.tarball}}" "${{steps.meta.outputs.ociEndpoint}}" | sed 's/^\([^:]*\):\s*/::set-output name=\L\1::/'
