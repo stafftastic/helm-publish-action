@@ -1,0 +1,48 @@
+name: Publish Helm Chart
+description: Package and publish Helm chart to Google Artifact Registry
+inputs:
+  project:
+    description: The Google Cloud Platform project to publish to
+    required: true
+  repository:
+    description: The repository in Google Artifact Registry to publish to
+    required: true
+  region:
+    description: The Google Cloud Platform region where the repository is located
+    required: true
+    default: europe-west3
+  serviceAccountKey:
+    description: The Service Account key to authenticate with Google Artifact Registry
+    required: true
+outputs:
+  chart:
+    description: The published chart including the tag
+    value: ${{steps.publish.outputs.pushed}}
+runs:
+  using: composite
+  steps:
+    - name: Generate metadata
+      id: meta
+      run: |
+        echo "::set-output name=httpsEndpoint::https://${{inputs.region}}-docker.pkg.dev"
+        echo "::set-output name=ociEndpoint::oci://${{inputs.region}}-docker.pkg.dev/${{inputs.repository}}/"
+    - name: Install Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: 3.9.0
+    - name: Authenticate helm with the Google Artifact Registry
+      run: |
+        echo '${{inputs.serviceAccountKey}}' | helm registry login \
+          --password-stdin \
+          --username _json_key \
+          "${{steps.meta.outputs.httpsEndpoint}}"
+    - name: Package Helm chart
+      id: package
+      run: |
+        version="${GITHUB_REF_NAME#v}"
+        tarball="$(helm package . --version "$version" | sed -r 's/^[^:]+:\s+//')"
+        echo ::set-output name=tarball::"$tarball"
+    - name: Publish Helm chart
+      id: publish
+      run: |
+        helm push "${{steps.package.outputs.tarball}}" "${{steps.meta.outputs.ociEndpoint}}" | sed 's/^\([^:]*\):\s*/::set-output name=\L\1::/'
