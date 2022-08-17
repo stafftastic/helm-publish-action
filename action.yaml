@@ -33,12 +33,14 @@ runs:
         version: 3.9.0
     - name: Authenticate helm with the Google Artifact Registry
       shell: sh
+      env:
+        SA_KEY: ${{inputs.serviceAccountKey}}
       run: |
         sudo apt-get update
         sudo apt-get install -y jq
-        echo '${{inputs.serviceAccountKey}}' | sha256sum
-        echo '${{inputs.serviceAccountKey}}' | jq -r '.private_key' | sha256sum
-        echo '${{inputs.serviceAccountKey}}' | helm registry login \
+        echo "$SA_KEY" | sha256sum
+        echo "$SA_KEY" | jq -r '.private_key' | sha256sum
+        echo "$SA_KEY" | helm registry login \
           --password-stdin \
           --username _json_key \
           "${{steps.meta.outputs.httpsEndpoint}}"
