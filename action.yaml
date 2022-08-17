@@ -18,14 +18,12 @@ outputs:
   chart:
     description: The published chart including the tag
     value: ${{steps.publish.outputs.pushed}}
-defaults:
-  run:
-    shell: sh
 runs:
   using: composite
   steps:
     - name: Generate metadata
       id: meta
+      shell: sh
       run: |
         echo "::set-output name=httpsEndpoint::https://${{inputs.region}}-docker.pkg.dev"
         echo "::set-output name=ociEndpoint::oci://${{inputs.region}}-docker.pkg.dev/${{inputs.repository}}/"
@@ -34,6 +32,7 @@ runs:
       with:
         version: 3.9.0
     - name: Authenticate helm with the Google Artifact Registry
+      shell: sh
       run: |
         echo '${{inputs.serviceAccountKey}}' | helm registry login \
           --password-stdin \
@@ -41,11 +40,13 @@ runs:
           "${{steps.meta.outputs.httpsEndpoint}}"
     - name: Package Helm chart
       id: package
+      shell: sh
       run: |
         version="${GITHUB_REF_NAME#v}"
         tarball="$(helm package . --version "$version" | sed -r 's/^[^:]+:\s+//')"
         echo ::set-output name=tarball::"$tarball"
     - name: Publish Helm chart
       id: publish
+      shell: sh
       run: |
         helm push "${{steps.package.outputs.tarball}}" "${{steps.meta.outputs.ociEndpoint}}" | sed 's/^\([^:]*\):\s*/::set-output name=\L\1::/'
