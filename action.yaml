@@ -34,8 +34,8 @@ runs:
     - name: Authenticate helm with the Google Artifact Registry
       shell: sh
       run: |
-        apt-get update
-        apt-get install -y jq
+        sudo apt-get update
+        sudo apt-get install -y jq
         echo '${{inputs.serviceAccountKey}}' | sha256sum
         echo '${{inputs.serviceAccountKey}}' | jq -r '.private_key' | sha256sum
         echo '${{inputs.serviceAccountKey}}' | helm registry login \
