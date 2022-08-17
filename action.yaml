@@ -23,7 +23,7 @@ runs:
   steps:
     - name: Generate metadata
       id: meta
-      shell: sh
+      shell: bash
       run: |
         echo "::set-output name=httpsEndpoint::https://${{inputs.region}}-docker.pkg.dev"
         echo "::set-output name=ociEndpoint::oci://${{inputs.region}}-docker.pkg.dev/${{inputs.project}}/${{inputs.repository}}/"
@@ -32,7 +32,7 @@ runs:
       with:
         version: 3.9.0
     - name: Authenticate helm with the Google Artifact Registry
-      shell: sh
+      shell: bash
       run: |
         printf "%s" '${{inputs.serviceAccountKey}}' | helm registry login \
           --password-stdin \
@@ -42,7 +42,6 @@ runs:
       id: package
       shell: bash
       run: |
-        set -o pipefail
         version="${GITHUB_REF_NAME#v}"
         tarball="$(helm package . --version "$version" | sed -r 's/^[^:]+:\s+//')"
         echo ::set-output name=tarball::"$tarball"
@@ -50,5 +49,4 @@ runs:
       id: publish
       shell: bash
       run: |
-        set -o pipefail
         helm push "${{steps.package.outputs.tarball}}" "${{steps.meta.outputs.ociEndpoint}}" | sed 's/^\([^:]*\):\s*/::set-output name=\L\1::/'
