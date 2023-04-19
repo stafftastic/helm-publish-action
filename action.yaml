@@ -38,6 +38,8 @@ runs:
           --password-stdin \
           --username _json_key \
           "${{steps.meta.outputs.httpsEndpoint}}"
+    - name: Build dependencies
+      run: helm dependency build
     - name: Package Helm chart
       id: package
       shell: bash
