@@ -39,6 +39,7 @@ runs:
           --username _json_key \
           "${{steps.meta.outputs.httpsEndpoint}}"
     - name: Build dependencies
+      shell: bash
       run: helm dependency build
     - name: Package Helm chart
       id: package
