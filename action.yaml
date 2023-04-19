@@ -25,7 +25,7 @@ runs:
       id: meta
       shell: bash
       run: |
-        echo "::set-output name=httpsEndpoint::https://${{inputs.region}}-docker.pkg.dev"
+        echo "::set-output name=authEndpoint::${{inputs.region}}-docker.pkg.dev"
         echo "::set-output name=ociEndpoint::oci://${{inputs.region}}-docker.pkg.dev/${{inputs.project}}/${{inputs.repository}}/"
     - name: Install Helm
       uses: azure/setup-helm@v3
@@ -37,11 +37,7 @@ runs:
         printf "%s" '${{inputs.serviceAccountKey}}' | helm registry login \
           --password-stdin \
           --username _json_key \
-          "${{steps.meta.outputs.httpsEndpoint}}"
-        printf "%s" '${{inputs.serviceAccountKey}}' | helm registry login \
-          --password-stdin \
-          --username _json_key \
-          "${{steps.meta.outputs.ociEndpoint}}"
+          "${{steps.meta.outputs.authEndpoint}}"
     - name: Build dependencies
       shell: bash
       run: helm dependency build
