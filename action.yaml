@@ -38,6 +38,10 @@ runs:
           --password-stdin \
           --username _json_key \
           "${{steps.meta.outputs.httpsEndpoint}}"
+        printf "%s" '${{inputs.serviceAccountKey}}' | helm registry login \
+          --password-stdin \
+          --username _json_key \
+          "${{steps.meta.outputs.ociEndpoint}}"
     - name: Build dependencies
       shell: bash
       run: helm dependency build
