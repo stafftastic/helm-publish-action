@@ -42,11 +42,9 @@ runs:
         i=0
         for url in $(yq '.dependencies[].repository' Chart.yaml); do
           [ "${url:0:6}" != "oci://" ] \
-            && echo helm repo add "repo$i" "$url"
+            && helm repo add "repo$i" "$url"
           i=$((i+1))
         done
-        helm repo update
-        helm repo list
     - name: Authenticate helm with the Google Artifact Registry
       shell: bash
       run: |
