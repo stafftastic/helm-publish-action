@@ -45,6 +45,8 @@ runs:
             && echo helm repo add "repo$i" "$url"
           i=$((i+1))
         done
+        helm repo update
+        helm repo list
     - name: Authenticate helm with the Google Artifact Registry
       shell: bash
       run: |
