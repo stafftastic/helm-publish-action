@@ -1,18 +1,17 @@
 name: Publish Helm Chart
-description: Package and publish Helm chart to Google Artifact Registry
+description: Package and publish Helm chart to an OCI registry
 inputs:
-  project:
-    description: The Google Cloud Platform project to publish to
+  registry:
+    description: The OCI registry to publish to
     required: true
   repository:
-    description: The repository in Google Artifact Registry to publish to
+    description: The repository within the registry to publish to
     required: true
-  region:
-    description: The Google Cloud Platform region where the repository is located
+  username:
+    description: Username used to authenticate with the registry
     required: true
-    default: europe-west3
-  serviceAccountKey:
-    description: The Service Account key to authenticate with Google Artifact Registry
+  password:
+    description: Password used to authenticate with the registry
     required: true
 outputs:
   chart:
@@ -25,8 +24,7 @@ runs:
       id: meta
       shell: bash
       run: |
-        echo "::set-output name=authEndpoint::${{inputs.region}}-docker.pkg.dev"
-        echo "::set-output name=ociEndpoint::oci://${{inputs.region}}-docker.pkg.dev/${{inputs.project}}/${{inputs.repository}}/"
+        echo "ociEndpoint=oci://${{inputs.registry/${{inputs.repository}}/" >> "$GITHUB_OUTPUT"
     - name: Install Helm
       uses: azure/setup-helm@v3
       with:
@@ -45,13 +43,13 @@ runs:
             && helm repo add "repo$i" "$url"
           i=$((i+1))
         done
-    - name: Authenticate helm with the Google Artifact Registry
+    - name: Authenticate Helm with the registry
       shell: bash
       run: |
-        printf "%s" '${{inputs.serviceAccountKey}}' | helm registry login \
+        printf "%s" '${{inputs.password}}' | helm registry login \
           --password-stdin \
-          --username _json_key \
-          "${{steps.meta.outputs.authEndpoint}}"
+          --username '${{inputs.username}}' \
+          "${{inputs.registry}}"
     - name: Build dependencies
       shell: bash
       run: helm dependency build
@@ -61,9 +59,9 @@ runs:
       run: |
         version="${GITHUB_REF_NAME#v}"
         tarball="$(helm package . --version "$version" | sed -r 's/^[^:]+:\s+//')"
-        echo ::set-output name=tarball::"$tarball"
+        echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
     - name: Publish Helm chart
       id: publish
       shell: bash
       run: |
-        helm push "${{steps.package.outputs.tarball}}" "${{steps.meta.outputs.ociEndpoint}}" | sed 's/^\([^:]*\):\s*/::set-output name=\L\1::/'
+        helm push "${{steps.package.outputs.tarball}}" "${{steps.meta.outputs.ociEndpoint}}" | sed 's/^\([^:]*\):\s*/\L\1=/' >> "$GITHUB_OUTPUT"
