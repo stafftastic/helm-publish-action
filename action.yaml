@@ -24,7 +24,7 @@ runs:
       id: meta
       shell: bash
       run: |
-        echo "ociEndpoint=oci://${{inputs.registry/${{inputs.repository}}/" >> "$GITHUB_OUTPUT"
+        echo "ociEndpoint=oci://${{inputs.registry}}/${{inputs.repository}}/" >> "$GITHUB_OUTPUT"
     - name: Install Helm
       uses: azure/setup-helm@v3
       with:
